@@ -1,6 +1,9 @@
 @extends('layouts.main')
 @section('title', 'Formative assessments Report')
 @section('content')
+    @push('head')
+        <link rel="stylesheet" href="{{ asset('plugins/DataTables/datatables.min.css') }}">
+    @endpush
 
     <div class="container-fluid">
         <div class="page-header">
@@ -62,19 +65,28 @@
                     </div>
                     <div class="row">
                         <div class="col-12">
-                            <table class="table">
+                            <table class="table" id="result-table">
                                 <thead>
                                 <tr>
-                                    <th>{{ __('Name')}}</th>
-                                    <th>{{ __('Email')}}</th>
-                                    <th>{{ __('Parent Name')}}</th>
-                                    <th>{{ __('Parent Email')}}</th>
-                                    <th>{{ __('Contact Number')}}</th>
-                                    <th>{{ __('Status')}}</th>
+                                    <th>{{ __('Subject')}}</th>
+                                    <th>{{ __('Total Activities')}}</th>
+                                    <th>{{ __('Attempted Activities')}}</th>
+                                    <th>{{ __('Earned Points')}}</th>
                                     <th>{{ __('Action')}}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
+                                @foreach($result as $data)
+                                    <tr>
+                                        <td>{{ $data['name'] }}</td>
+                                        <td>{{ $data['total_learning_activity'] }}</td>
+                                        <td>{{ $data['attempted_activities'] }}</td>
+                                        <td>{{ $data['attempted_points'] }}</td>
+                                        <td>
+                                            <a href="" class="text-primary"><i class="ik ik-eye"></i></a>
+                                        </td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -84,6 +96,7 @@
         </div>
     </div>
     @push('script')
+        <script src="{{ asset('plugins/DataTables/datatables.min.js') }}"></script>
         <script src="{{ asset('js/assessments-reports.js') }}"></script>
     @endpush
 @endsection

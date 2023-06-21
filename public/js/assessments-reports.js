@@ -155,4 +155,11 @@ $(document).ready(function () {
             }
         });
     }
+
+    $('#result-table').DataTable({
+        scrollY: '50vh',
+        scrollCollapse: true,
+        paging: false,
+        ordering: false
+    });
 })
