@@ -170,8 +170,8 @@ class FormativeAssessmentController extends Controller
                         $output = '<div class="">
                                     <a href=""><i class="fas fa-file-pdf f-16 text-pink"></i></a>
                                     <a href=""><i class="fas fa-envelope f-16 text-blue"></i></a>
-                                    <a href="' . route('reports.view-result', [
-                                        'learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id]) . '">
+                                    <a href="' . route('reports.view-subjects', [
+                                'learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id]) . '">
                                     <i class="ik ik-eye f-16 text-green"></i>
                                     </a>
                                 </div>';
@@ -186,7 +186,14 @@ class FormativeAssessmentController extends Controller
         }
     }
 
-    public function viewResult($learner_id, $stream_id, $term_id) {
+    /**
+     * @param $learner_id
+     * @param $stream_id
+     * @param $term_id
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function viewSubjects($learner_id, $stream_id, $term_id)
+    {
         try {
             $stream = Stream::where('id', $stream_id)
                 ->with('school_class', function ($q) {
@@ -248,7 +255,34 @@ class FormativeAssessmentController extends Controller
         }
     }
 
-    public function downloadPdf($learner_id) {
+    public function viewResult($subject_id, $learner_id, $term_id, $stream_id)
+    {
+        try {
+            $learner = User::find($learner_id);
+            $subject = Subjects::where('id', $subject_id)
+                ->with('strands', function ($q) {
+                    return $q->with('sub_strands', function ($q) {
+                        return $q->with('learning_activities');
+                    });
+                })
+                ->first();
+
+            $term = Term::find($term_id);
+            $stream = Stream::find($stream_id);
+            $admins = getSchoolAdmins();
+            $levels = PerformanceLevel::when(in_array(Auth::user()->role, ['admin', 'teacher']), function ($q) use ($admins) {
+                return $q->whereIn('created_by', $admins);
+            })->latest()->get();
+
+            return view('formative-assessments.assessment-result', compact('learner', 'subject', 'term', 'stream', 'levels'));
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    public function downloadPdf($learner_id)
+    {
         try {
 
         } catch (\Exception $e) {

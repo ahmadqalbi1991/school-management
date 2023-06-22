@@ -162,4 +162,11 @@ $(document).ready(function () {
         paging: false,
         ordering: false
     });
+
+    $('#scr-vtr-dynamic').DataTable({
+        scrollY: '100vh',
+        scrollCollapse: true,
+        paging: false,
+        ordering: false
+    });
 })

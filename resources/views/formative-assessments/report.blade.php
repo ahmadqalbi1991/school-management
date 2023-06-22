@@ -83,7 +83,8 @@
                                         <td>{{ $data['attempted_activities'] }}</td>
                                         <td>{{ $data['attempted_points'] }}</td>
                                         <td>
-                                            <a href="" class="text-primary"><i class="ik ik-eye"></i></a>
+                                            <a href="{{ route('reports.view-result', ['subject_id' => $data['id'], 'learner_id' => $learner->id, 'term_id' => $term->id, 'stream_id' => $stream->id]) }}"
+                                               class="text-primary"><i class="ik ik-eye"></i></a>
                                         </td>
                                     </tr>
                                 @endforeach
