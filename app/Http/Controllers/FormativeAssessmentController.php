@@ -267,14 +267,51 @@ class FormativeAssessmentController extends Controller
                 })
                 ->first();
 
-            $term = Term::find($term_id);
-            $stream = Stream::find($stream_id);
+            $activities_defination = [];
+            $strands = $subject->strands;
             $admins = getSchoolAdmins();
             $levels = PerformanceLevel::when(in_array(Auth::user()->role, ['admin', 'teacher']), function ($q) use ($admins) {
                 return $q->whereIn('created_by', $admins);
             })->latest()->get();
+            foreach ($strands as $strand_key => $strand) {
+                $activities_defination[$strand_key]['title'] = $strand->title;
+                $activities_defination[$strand_key]['id'] = $strand->id;
+                $activities_defination[$strand_key]['sub_strands'] = [];
+                $sub_strands = $strand->sub_strands;
+                foreach ($sub_strands as $sub_strand_key => $sub_strand) {
+                    $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['title'] = $sub_strand->title;
+                    $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['id'] = $sub_strand->id;
+                    $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'] = [];
+                    $activities = $sub_strand->learning_activities;
+                    foreach ($activities as $activity_key => $activity) {
+                        $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['title'] = $activity->title;
+                        $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['id'] = $activity->id;
+                        foreach ($levels as $level_key => $level) {
+                            $assessment_object = StudentAssessment::where([
+                                'stream_id' => $stream_id,
+                                'performance_level_id' => $level->id,
+                                'subject_id' => $subject_id,
+                                'learner_id' => $learner_id,
+                                'strand_id' => $strand->id,
+                                'sub_strand_id' => $sub_strand->id,
+                                'learning_activity_id' => $activity->id,
+                            ])->first();
+                            $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['levels'][$level_key] = null;
+                            if ($assessment_object) {
+                                $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['levels'][$level_key]['level'] = $level->title;
+                                $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['levels'][$level_key]['id'] = $level->id;
+                                $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['levels'][$level_key]['points'] = $assessment_object->level->points;
+                            }
+                        }
+                    }
+                }
+            }
+//            dd($activities_defination);
 
-            return view('formative-assessments.assessment-result', compact('learner', 'subject', 'term', 'stream', 'levels'));
+            $term = Term::find($term_id);
+            $stream = Stream::find($stream_id);
+
+            return view('formative-assessments.assessment-result', compact('learner', 'subject', 'term', 'stream', 'levels', 'activities_defination'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

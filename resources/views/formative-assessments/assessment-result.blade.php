@@ -89,22 +89,31 @@
                                         <th>{{ __('Points') }}</th>
                                     </tr>
                                     </thead>
+                                    @php
+                                        $total_attempted = 0;
+                                        $subject_total = 0;
+                                        $total_activities = 0;
+                                        $average_performance = 0;
+                                    @endphp
                                     <tbody>
-                                    @foreach($subject->strands as $strand)
+                                    @foreach($subject->strands as $strand_key => $strand)
                                         <tr>
                                             <td>
                                                 <strong>{{ $strand->title }}</strong>
                                             </td>
                                             <td colspan="{{ $levels->count() + 1 }}"></td>
                                         </tr>
-                                        @foreach($strand->sub_strands as $sub_strand)
+                                        @foreach($strand->sub_strands as $sub_strand_key => $sub_strand)
                                             <tr>
                                                 <td>
                                                     <p>{{ $sub_strand->title }}</p>
                                                 </td>
                                                 <td colspan="{{ $levels->count() + 1 }}"></td>
                                             </tr>
-                                            @foreach($sub_strand->learning_activities as $activity)
+                                            @php
+                                                $total_activities += $sub_strand->learning_activities->count();
+                                            @endphp
+                                            @foreach($sub_strand->learning_activities as $activity_key => $activity)
                                                 <tr>
                                                     <td>
                                                         <p>{{ $activity->title }}</p>
@@ -112,16 +121,15 @@
                                                     @php
                                                         $point = 0;
                                                     @endphp
-                                                    @foreach($levels as $level)
-                                                        @php
-                                                            $assessment = checkAssessment($level->id, $strand->id, $sub_strand->id, $activity->id, $learner->id, $subject->id, $stream->id);
-                                                            if ($assessment) {
-                                                                $point = $assessment->level->points;
-                                                            }
-                                                        @endphp
+                                                    @foreach($levels as $level_key => $level)
                                                         <td class="text-center">
-                                                            @if($assessment)
-                                                               <h5>
+                                                            @if(!empty($activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['levels'][$level_key]))
+                                                                @php
+                                                                    $point = $activities_defination[$strand_key]['sub_strands'][$sub_strand_key]['activities'][$activity_key]['levels'][$level_key]['points'];
+                                                                    $total_attempted += 1;
+                                                                    $subject_total = $point + $subject_total;
+                                                                @endphp
+                                                                <h5>
                                                                    <strong>
                                                                        <i class="text-green ik ik-check"></i>
                                                                    </strong>
@@ -130,17 +138,38 @@
                                                         </td>
                                                     @endforeach
                                                     <td>
-                                                        @if($assessment)
-                                                            {{ $point }}
-                                                        @else
-                                                            0
-                                                        @endif
+                                                        {{ $point }}
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         @endforeach
                                     @endforeach
                                     </tbody>
+                                    <tfoot>
+                                    @php
+                                        $average_performance = $subject_total / $total_activities;
+                                    @endphp
+                                    <tr>
+                                        <td><strong>{{ __('Attempted Assessment') }}</strong></td>
+                                        <td colspan="{{ $levels->count() }}"></td>
+                                        <td><h5>{{ $total_attempted }}</h5></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ __('Subject Total') }}</strong></td>
+                                        <td colspan="{{ $levels->count() }}"></td>
+                                        <td><h5>{{ $subject_total }}</h5></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ __('Total Activities') }}</strong></td>
+                                        <td colspan="{{ $levels->count() }}"></td>
+                                        <td><h5>{{ $total_activities }}</h5></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ __('Average Performance') }}</strong></td>
+                                        <td colspan="{{ $levels->count() }}"></td>
+                                        <td><h5>{{ round($average_performance, 2) }}</h5></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>

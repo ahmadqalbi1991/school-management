@@ -164,7 +164,7 @@ $(document).ready(function () {
     });
 
     $('#scr-vtr-dynamic').DataTable({
-        scrollY: '100vh',
+        scrollY: '50vh',
         scrollCollapse: true,
         paging: false,
         ordering: false
