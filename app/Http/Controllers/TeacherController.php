@@ -112,6 +112,7 @@ class TeacherController extends Controller
             if ($user) {
                 $details = [
                     'title' => 'Registration Successful',
+                    'subject' => 'Registration Successful',
                     'body' => 'Congratulations! Your account has been created on ' . env('APP_NAME') . '. Please use the following details to login. <br/>Email: <strong>' . $input['email'] . '</strong> <br/>Password: <strong>' . $password . '</strong>',
                     'email' => $input['email'],
                     'show_btns' => 1,

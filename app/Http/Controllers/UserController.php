@@ -113,6 +113,7 @@ class UserController extends Controller
             if ($user) {
                 $details = [
                     'title' => 'Registration Successful',
+                    'subject' => 'Registration Successful',
                     'body' => 'Congratulations! Your account has been created on ' . env('APP_NAME') . '. Please use the following details to login. <br/>Email: <strong>' . $request->email . '</strong> <br/>Password: <strong>' . $password . '</strong>',
                     'email' => $request->email,
                     'show_btns' => 1,

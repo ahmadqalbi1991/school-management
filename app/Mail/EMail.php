@@ -29,8 +29,10 @@ class EMail extends Mailable
      */
     public function build()
     {
-        return $this
-            ->subject(__('Registration Successfully'))
-            ->view('emails.template');
+        $email = $this->subject(__($this->details['subject']));
+        if (!empty($this->details['file'])) {
+            $email->attach($this->details['file']);
+        }
+        return $email->view('emails.template');
     }
 }

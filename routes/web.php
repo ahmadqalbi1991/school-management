@@ -129,7 +129,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/get-list', [FormativeAssessmentController::class, 'getLearners']);
         Route::get('/view-learner-subjects/{learner_id}/{stream_id}/{term_id}', [FormativeAssessmentController::class, 'viewSubjects'])->name('view-subjects');
         Route::get('/view-learner-result/{subject_id}/{learner_id}/{term_id}/{stream_id}', [FormativeAssessmentController::class, 'viewResult'])->name('view-result');
-        Route::get('/download-pdf/{learner_id}', [FormativeAssessmentController::class, 'downloadPdf']);
+        Route::get('/download-pdf/{learner_id}/{stream_id}/{term_id}/{send_email?}', [FormativeAssessmentController::class, 'downloadPdf'])->name('download-pdf');
     });
 
 

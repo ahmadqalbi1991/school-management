@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PerformanceLevel;
 use App\Models\School;
 use App\Models\SchoolAdmins;
 use App\Models\StudentAssessment;
@@ -29,41 +30,31 @@ function initials($str)
     return $ret;
 }
 
-function checkAssessment(
-    $level = null,
-    $strand_id = null,
-    $sub_strand_id = null,
-    $activity_id = null,
-    $learner_id = null,
-    $subject_id = null,
-    $stream_id = null,
-    $term_id = null
-)
-{
-    return StudentAssessment::when($level, function ($q) use ($level) {
-        return $q->where('performance_level_id', $level);
-    })
-        ->when($strand_id, function ($q) use ($strand_id) {
-            return $q->where('strand_id', $strand_id);
-        })
-        ->when($sub_strand_id, function ($q) use ($sub_strand_id) {
-            return $q->where('sub_strand_id', $sub_strand_id);
-        })
-        ->when($activity_id, function ($q) use ($activity_id) {
-            return $q->where('learning_activity_id', $activity_id);
-        })
-        ->when($learner_id, function ($q) use ($learner_id) {
-            return $q->where('learner_id', $learner_id);
-        })
-        ->when($subject_id, function ($q) use ($subject_id) {
-            return $q->where('subject_id', $subject_id);
-        })
-        ->when($stream_id, function ($q) use ($stream_id) {
-            return $q->where('stream_id', $stream_id);
-        })
-        ->when($term_id, function ($q) use ($term_id) {
-            return $q->where('term_id', $term_id);
-        })
-        ->with('level')
-        ->first();
+function checkPointsCriteria($points, $total_check = false) {
+    $initial_point = 0;
+    $admins = getSchoolAdmins();
+    $levels = PerformanceLevel::when(in_array(Auth::user()->role, ['admin', 'teacher']), function ($q) use ($admins) {
+        return $q->whereIn('created_by', $admins);
+    })->orderby('points')->get();
+
+    foreach ($levels as $key => $level) {
+        if ($points >= $initial_point && $points <= $level->points) {
+            return $level->title;
+        }
+
+        if (($total_check)) {
+            $level_obj = PerformanceLevel::when(in_array(Auth::user()->role, ['admin', 'teacher']), function ($q) use ($admins) {
+                return $q->whereIn('created_by', $admins);
+            })
+                ->orderBy('points', 'desc')
+                ->where('points', '<=', $points)
+                ->first();
+
+            if ($level_obj) {
+                return $level_obj->title;
+            }
+        }
+
+        $initial_point = $level->points + .1;
+    }
 }

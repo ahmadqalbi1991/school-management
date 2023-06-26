@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\EmailJob;
 use App\Models\ClassSubject;
-use App\Models\Learner;
 use App\Models\PerformanceLevel;
 use App\Models\SchoolClass;
 use App\Models\Strand;
@@ -15,6 +15,10 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Auth;
+use Illuminate\Support\Facades\Storage;
+use PDF;
+use Response;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
@@ -168,8 +172,8 @@ class FormativeAssessmentController extends Controller
                     $output = '';
                     if ($hasManagePermission) {
                         $output = '<div class="">
-                                    <a href=""><i class="fas fa-file-pdf f-16 text-pink"></i></a>
-                                    <a href=""><i class="fas fa-envelope f-16 text-blue"></i></a>
+                                    <a href="' . route('reports.download-pdf', ['learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id]) . '"><i class="fas fa-file-pdf f-16 text-pink"></i></a>
+                                    <a href="' . route('reports.download-pdf', ['learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id, 'send_email' => true]) . '"><i class="fas fa-envelope f-16 text-blue"></i></a>
                                     <a href="' . route('reports.view-subjects', [
                                 'learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id]) . '">
                                     <i class="ik ik-eye f-16 text-green"></i>
@@ -255,6 +259,13 @@ class FormativeAssessmentController extends Controller
         }
     }
 
+    /**
+     * @param $subject_id
+     * @param $learner_id
+     * @param $term_id
+     * @param $stream_id
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function viewResult($subject_id, $learner_id, $term_id, $stream_id)
     {
         try {
@@ -318,9 +329,90 @@ class FormativeAssessmentController extends Controller
         }
     }
 
-    public function downloadPdf($learner_id)
+    public function downloadPdf($learner_id, $stream_id, $term_id, $send_email = false)
     {
         try {
+            $school = getSchoolSettings();
+            $stream = Stream::where('id', $stream_id)
+                ->with('school_class', function ($q) {
+                    return $q->with('class_subjects', function ($q) {
+                        return $q->with('subject');
+                    });
+                })
+                ->first();
+
+            $result = [];
+            foreach ($stream->school_class->class_subjects as $subject) {
+                $strands = Strand::where('subject_id', $subject->subject->id)
+                    ->with('sub_strands', function ($q) {
+                        return $q->with('learning_activities');
+                    })
+                    ->get();
+                $total_learning_activities = 0;
+                $learning_activities_ids = [];
+                if ($strands->count()) {
+                    foreach ($strands as $strand) {
+                        foreach ($strand->sub_strands->pluck('learning_activities') as $learning_activity) {
+                            foreach ($learning_activity as $activity) {
+                                $learning_activities_ids[] = $activity->id;
+                            }
+                            $learning_activities_ids = array_unique($learning_activities_ids);
+                            $total_learning_activities += count($learning_activity);
+                        }
+                    }
+                }
+
+                $attempted_activities = StudentAssessment::where([
+                    'learner_id' => $learner_id,
+                    'subject_id' => $subject->subject->id,
+                    'stream_id' => $stream_id,
+                    'term_id' => $term_id,
+                ])
+                    ->with('level')
+                    ->whereIn('learning_activity_id', $learning_activities_ids)
+                    ->get();
+
+                $attempted_points = $attempted_activities->pluck('level')->pluck('points')->sum() / ($total_learning_activities ? $total_learning_activities : 1);
+
+                $result[] = [
+                    'id' => $subject->subject->id,
+                    'name' => $subject->subject->title,
+                    'total_learning_activity' => $total_learning_activities,
+                    'attempted_activities' => $attempted_activities->pluck('level')->pluck('points')->count(),
+                    'attempted_points' => round($attempted_points, 2),
+                ];
+            }
+
+            $learner = User::find($learner_id);
+            $term = Term::find($term_id);
+            $data = [
+                'school' => $school,
+                'stream' => $stream,
+                'term' => $term,
+                'learner' => $learner,
+                'results' => $result
+            ];
+
+            $pdf = \PDF::loadView('pdfs.result', $data);
+            if ($send_email) {
+                $content = $pdf->output();
+                \Storage::put('public/reports/' . $learner->name . '/' . 'report_card_' . $term->term . '.pdf', $content);
+                $details = [
+                    'title' => 'Report Card',
+                    'body' => 'Please download the file for view ',
+                    'email' => $learner->parent_email,
+                    'show_btns' => 0,
+                    'link' => null,
+                    'subject' => 'Report Card',
+                    'file' => \Storage::disk('public')->path('reports/' . $learner->name . '/' . 'report_card_' . $term->term . '.pdf')
+                ];
+
+                dispatch(new EmailJob($details));
+                \Storage::delete('public/reports/' . $learner->name . '/' . 'report_card_' . $term->term . '.pdf');
+                return redirect()->back()->with('success', 'Email Sent');
+            } else {
+                return $pdf->stream('report_card_' . $term->term . '.pdf');
+            }
 
         } catch (\Exception $e) {
             $bug = $e->getMessage();

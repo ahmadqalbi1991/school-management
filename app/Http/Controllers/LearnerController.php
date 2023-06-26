@@ -125,7 +125,8 @@ class LearnerController extends Controller
                     'body' => 'Congratulations! Your account has been created on ' . env('APP_NAME') . '. Please use the following details to login. <br/>Email: <strong>' . $input['email'] . '</strong> <br/>Password: <strong>' . $password . '</strong>',
                     'email' => $input['email'],
                     'show_btns' => 1,
-                    'link' => route('login')
+                    'link' => route('login'),
+                    'subject' => 'Registration Successful'
                 ];
 
                 dispatch(new EmailJob($details));
