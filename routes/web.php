@@ -121,8 +121,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::group(['middleware' => 'can:manage_formative_assessments', 'as' => 'formative-assessments.', 'prefix' => 'formative-assessments'], function () {
         Route::get('/{class?}/{stream?}/{subject?}', [FormativeAssessmentController::class, 'index'])->name('index');
         Route::post('/save-formative-assessment', [FormativeAssessmentController::class, 'save'])->name('save');
-        Route::post('/get-assessments', [FormativeAssessmentController::class, 'getAssessments']);
     });
+
+    Route::post('/get-assessments', [FormativeAssessmentController::class, 'getAssessments']);
 
     Route::group(['middleware' => 'can:manage_formative_assessments', 'as' => 'reports.', 'prefix' => 'reports'], function () {
         Route::get('/', [FormativeAssessmentController::class, 'reports'])->name('index');
