@@ -329,6 +329,13 @@ class FormativeAssessmentController extends Controller
         }
     }
 
+    /**
+     * @param $learner_id
+     * @param $stream_id
+     * @param $term_id
+     * @param $send_email
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function downloadPdf($learner_id, $stream_id, $term_id, $send_email = false)
     {
         try {

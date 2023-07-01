@@ -151,15 +151,18 @@
             </tbody>
             <tfoot>
             <tr>
+                @php
+                    $final_performance = $total_points / count($results);
+                @endphp
                 <th>{{ __('Final Performance') }}</th>
-                <th style="text-align: right">{{ round($total_points, 2) }}</th>
-                <th>{{ checkPointsCriteria($total_points, true) }}</th>
+                <th style="text-align: right">{{ round($final_performance, 2) }}</th>
+                <th>{{ checkPointsCriteria($final_performance, true) }}</th>
             </tr>
             </tfoot>
         </table>
     </div>
-    <div class="general-text">This term formative assessment {{ $total_points }}, {{ checkPointsCriteria($total_points, true) }}</div>
-    <p>Your rating was {{ checkPointsCriteria($total_points, true) }}</p>
+    <div class="general-text">This term formative assessment {{ round($final_performance, 2) }}, {{ checkPointsCriteria(round($final_performance, 2), true) }}</div>
+    <p>Your rating was {{ checkPointsCriteria(round($final_performance, 2), true) }}</p>
     <div class="signatures">
         <div class="teacher">
             <p>{{ __('Signature') }}</p>

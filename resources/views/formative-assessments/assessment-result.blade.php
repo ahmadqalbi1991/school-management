@@ -147,7 +147,7 @@
                                     </tbody>
                                     <tfoot>
                                     @php
-                                        $average_performance = $subject_total / $total_activities;
+                                        $average_performance = $subject_total / $total_attempted;
                                     @endphp
                                     <tr>
                                         <td><strong>{{ __('Attempted Assessment') }}</strong></td>
