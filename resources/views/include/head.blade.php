@@ -13,7 +13,7 @@
 <script src="{{ asset('js/app.js') }}"></script>
 
 <!-- themekit admin template asstes -->
-<link rel="stylesheet" href="{{ asset('all.css') }}">
+<link rel="stylesheet" href="{{ asset('all.css?v=1.1') }}">
 <link rel="stylesheet" href="{{ asset('dist/css/theme.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/icon-kit/dist/css/iconkit.min.css') }}">

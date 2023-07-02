@@ -317,7 +317,6 @@ class FormativeAssessmentController extends Controller
                     }
                 }
             }
-//            dd($activities_defination);
 
             $term = Term::find($term_id);
             $stream = Stream::find($stream_id);

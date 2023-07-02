@@ -123,7 +123,10 @@
                                     </th>
                                     @foreach($levels as $level)
                                         <th>
-                                            <div class="formative-assessment">
+                                            <div class="formative-assessment d-xs-table-cell d-sm-none">
+                                                <p class="m-0"><strong>{{ initials($level->title) }}</strong></p>
+                                            </div>
+                                            <div class="formative-assessment d-xs-none d-sm-block">
                                                 <p class="m-0"><strong>{{ $level->title }}</strong></p>
                                                 <span>{{ $level->detail }}</span>
                                             </div>

@@ -99,14 +99,14 @@
                                     @foreach($subject->strands as $strand_key => $strand)
                                         <tr>
                                             <td>
-                                                <strong>{{ $strand->title }}</strong>
+                                                <h6><strong>{{ $strand->title }}</strong></h6>
                                             </td>
                                             <td colspan="{{ $levels->count() + 1 }}"></td>
                                         </tr>
                                         @foreach($strand->sub_strands as $sub_strand_key => $sub_strand)
                                             <tr>
                                                 <td>
-                                                    <p>{{ $sub_strand->title }}</p>
+                                                    <strong>{{ $sub_strand->title }}</strong>
                                                 </td>
                                                 <td colspan="{{ $levels->count() + 1 }}"></td>
                                             </tr>
