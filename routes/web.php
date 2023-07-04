@@ -133,10 +133,17 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/download-pdf/{learner_id}/{stream_id}/{term_id}/{send_email?}', [FormativeAssessmentController::class, 'downloadPdf'])->name('download-pdf');
     });
 
+    Route::group(['middleware' => 'can:manage_students_subjects', 'as' => 'learners-subjects.', 'prefix' => 'learners-subjects'], function () {
+        Route::get('/', [LearnerController::class, 'addLearnerSubjects'])->name('index');
+        Route::post('/save-learners-subjects', [LearnerController::class, 'saveLearnerSubjects'])->name('save');
+        Route::post('/update-learners-subjects', [LearnerController::class, 'updateLearnerSubjects'])->name('update');
+    });
+
 
     Route::get('/get-streams/{id}', [ClassesController::class, 'getStreams']);
     Route::get('/get-sub-strands/{id}', [StrandController::class, 'getSubStrands']);
     Route::get('/get-learning-activities/{id}', [SubStrandController::class, 'getLearningActivities']);
+    Route::get('/get-learners/{id}', [StreamController::class, 'getLearners']);
 
     Route::group(['middleware' => 'can:manage_classes', 'as' => 'classes.', 'prefix' => 'classes'], function () {
         Route::get('/', [ClassesController::class, 'index'])->name('index');

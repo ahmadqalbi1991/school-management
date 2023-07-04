@@ -23,7 +23,7 @@
             pagingType: "full_numbers",
             dom: "<'row'<'col-sm-2'l><'col-sm-7 text-center'B><'col-sm-3'f>>tipr",
             ajax: {
-                url: 'learners/get-list',
+                url: '/learners/get-list',
                 type: "get",
                 headers: {
                     'X-CSRF-TOKEN': token
@@ -145,5 +145,28 @@
     });
     // datatable inline cell edit callback function
 
+    $('#class_id').on('change', function () {
+        $.ajax({
+            url: '/get-streams/' + $(this).val(),
+            type: 'GET',
+            success: function (response) {
+                $('#stream-id').html(response.streams).select2()
+                $('#subject-id').html(response.subjects).select2()
+                $('#stream-id').prop('disabled', false)
+                $('#subject-id').prop('disabled', false)
+            }
+        })
+    })
+
+    $('#stream-id').on('change', function () {
+        $.ajax({
+            url: '/get-learners/' + $(this).val(),
+            type: 'GET',
+            success: function (response) {
+                $('#learner-id').html(response).select2()
+                $('#learner-id').prop('disabled', false)
+            }
+        })
+    })
     $('select').select2();
 })(jQuery);

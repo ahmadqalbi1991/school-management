@@ -34,7 +34,7 @@
                         <div class="nav-item {{ ($segment1 == 'reports') ? 'active' : '' }}">
                             <a href="{{route('reports.index')}}">
                                 <i class="fas fa-chart-bar"></i>
-                                <span>{{ __('Reports')}}</span>
+                                <span>{{ __('Formative Reports')}}</span>
                             </a>
                         </div>
                     @endcan
@@ -42,7 +42,7 @@
                 @can('manage_user')
                     <div
                         class="nav-item {{ ($segment1 == 'users' || $segment1 == 'roles'||$segment1 == 'permission' ||$segment1 == 'user') ? 'active open' : '' }} has-sub">
-                        <a href="#"><i class="ik ik-user"></i><span>{{ __('Adminstrator')}}</span></a>
+                        <a href="#"><i class="ik ik-user"></i><span>{{ __('Administrator')}}</span></a>
                         <div class="submenu-content">
                             <!-- only those have manage_user permission will get access -->
                             @can('manage_admins')
@@ -65,7 +65,15 @@
                     </div>
                 @endcan
                 @can('manage_teachers')
-                    <div class="nav-item {{ ($segment1 == 'teachers') ? 'active' : '' }}">
+                    <div class="nav-item {{ ($segment1 == 'learners-subjects') ? 'active' : '' }}">
+                        <a href="{{route('learners-subjects.index')}}">
+                            <i class="ik ik-book"></i>
+                            <span>{{ __('Students Subjects')}}</span>
+                        </a>
+                    </div>
+                @endcan
+                @can('manage_students_subjects')
+                    <div class="nav-item {{ ($segment1 == 'students-subjects') ? 'active' : '' }}">
                         <a href="{{route('teachers.index')}}">
                             <i class="ik ik-user"></i>
                             <span>{{ __('Teachers')}}</span>

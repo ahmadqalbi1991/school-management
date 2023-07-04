@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClassSubject;
 use App\Models\SchoolClass;
 use App\Models\Stream;
 use Illuminate\Http\Request;
@@ -154,12 +155,21 @@ class ClassesController extends Controller
     public function getStreams($id) {
         try {
             $streams = Stream::where('class_id', $id)->get();
-            $html = '<option value="">Select Stream</option>';
+            $subjects = ClassSubject::where('class_id', $id)
+                ->with('subject')
+                ->get();
+
+            $stream_html = '<option value="">Select Stream</option>';
+            $subjects_html = '<option value="">Select Subjects</option>';
             foreach ($streams as $stream) {
-                $html .= '<option value="' . $stream->id . '">' . $stream->title . '</option>';
+                $stream_html .= '<option value="' . $stream->id . '">' . $stream->title . '</option>';
             }
 
-            return $html;
+            foreach ($subjects as $subject) {
+                $subjects_html .= '<option value="' . $subject->id . '">' . $subject->subject->title . '</option>';
+            }
+
+            return ['streams' => $stream_html, 'subjects' => $subjects_html];
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

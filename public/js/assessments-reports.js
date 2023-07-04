@@ -4,7 +4,7 @@ $(document).ready(function () {
             url: '/get-streams/' + $(this).val(),
             type: 'GET',
             success: function (response) {
-                $('#stream-id').html(response).select()
+                $('#stream-id').html(response.streams).select2()
                 $('#stream-id').prop('disabled', false)
             }
         })

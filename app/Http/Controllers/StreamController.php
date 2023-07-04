@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Stream;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -159,6 +160,24 @@ class StreamController extends Controller
         try {
             Stream::where('id', $id)->delete();
             return redirect()->back()->with('success', 'Stream Deleted Successfully');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse|string
+     */
+    public function getLearners($id) {
+        try {
+            $learners = User::where('stream_id', $id)->get();
+            $html = '<option value="">Select Learner(s)</option>';
+            foreach ($learners as $learner) {
+                $html .= '<option value="' . $learner->id . '">' . $learner->name . '</option>';
+            }
+            return $html;
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\EmailJob;
+use App\Models\ClassSubject;
+use App\Models\LearnerSubject;
 use App\Models\School;
+use App\Models\SchoolClass;
 use App\Models\Stream;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -77,6 +80,7 @@ class LearnerController extends Controller
                 if ($hasManagePermission) {
                     $output = '<div class="">
                                     <a href="' . route('learners.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-edit f-16 text-blue"></i></a>
+                                    <a href="' . route('learners-subjects.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-book-open f-16 text-green"></i></a>
                                     <a href="' . route('learners.delete', ['id' => $data->id]) . '"><i class="ik ik-trash-2 f-16 text-red"></i></a>
                                 </div>';
                 }
@@ -193,6 +197,101 @@ class LearnerController extends Controller
             User::where('id', $id)->delete();
 
             return redirect()->route('learners.index')->with('success', 'Learner deleted successfully');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function addLearnerSubjects(Request $request)
+    {
+        try {
+            $classes = SchoolClass::all();
+            $learner = $class_id = $learner_data = $streams = $subjects = $subjects_ids = null;
+            if ($request->has('pass_key') && $request->has('edit')) {
+                $learner = User::where('id', $request->get('pass_key'))
+                    ->with('stream', function ($q) {
+                        return $q->with('school_class');
+                    })->first();
+
+                $class_id = $learner->stream->school_class->id;
+                $streams = Stream::where('class_id', $class_id)->get();
+                $subjects = ClassSubject::with('subject')
+                    ->where('class_id', $class_id)->get();
+
+                $learner_data = LearnerSubject::where('learner_id', $request->get('pass_key'))
+                    ->with(['subject'])->get();
+
+                $subjects_ids = $learner_data->pluck('subject_id')->toArray();
+            }
+
+            return view('learners.add-subjects', compact('classes', 'learner', 'learner_data', 'class_id', 'streams', 'subjects', 'subjects_ids'));
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function saveLearnerSubjects(Request $request)
+    {
+        try {
+            $input = $request->except('_token');
+            $learner_ids = $input['learner_ids'];
+            $subject_ids = $input['subject_ids'];
+            unset($input['subject_ids'], $input['learner_ids']);
+
+            foreach ($learner_ids as $learner_id) {
+                foreach ($subject_ids as $id) {
+                    $input['subject_id'] = $id;
+                    $input['learner_id'] = $learner_id;
+                    LearnerSubject::create($input);
+                }
+            }
+
+            return back()->with('success', 'Subjects assigned to learner');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateLearnerSubjects(Request $request)
+    {
+        try {
+            $input = $request->except('_token');
+            $learner_ids = $input['learner_ids'];
+            $subject_ids = $input['subject_ids'];
+            unset($input['subject_ids'], $input['learner_ids']);
+
+            foreach ($learner_ids as $learner_id) {
+                foreach ($subject_ids as $id) {
+                    $exists_subject = LearnerSubject::where([
+                        'subject_id' => $id,
+                        'learner_id' => $learner_id,
+                        'class_id' => $input['class_id'],
+                        'stream_id' => $input['stream_id']
+                    ])->first();
+
+                    if (!$exists_subject) {
+                        $input['subject_id'] = $id;
+                        $input['learner_id'] = $learner_id;
+                        LearnerSubject::create($input);
+                    }
+                }
+            }
+
+            return back()->with('success', 'Subjects assigned to learner');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
