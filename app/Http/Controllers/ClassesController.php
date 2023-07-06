@@ -166,7 +166,7 @@ class ClassesController extends Controller
             }
 
             foreach ($subjects as $subject) {
-                $subjects_html .= '<option value="' . $subject->id . '">' . $subject->subject->title . '</option>';
+                $subjects_html .= '<option value="' . $subject->subject->id . '">' . $subject->subject->title . '</option>';
             }
 
             return ['streams' => $stream_html, 'subjects' => $subjects_html];

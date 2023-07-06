@@ -44,19 +44,22 @@
                     </div>
                     <div class="row">
                         <div class="col-md-3">
-                            <p>Learner Name: <strong>{{ $learner->name }}</strong></p>
+                            <p>{{ __('Learner Name:') }} <strong>{{ $learner->name }}</strong></p>
                         </div>
                         <div class="col-md-3">
-                            <p>Class: <strong>{{ $stream->school_class->class }}</strong></p>
+                            <p>{{ __('Class:') }} <strong>{{ $stream->school_class->class }}</strong></p>
                         </div>
                         <div class="col-md-3">
-                            <p>Stream: <strong>{{ $stream->title }}</strong></p>
+                            <p>{{ __('Stream:') }} <strong>{{ $stream->title }}</strong></p>
                         </div>
                         <div class="col-md-3">
-                            <p>Admission number: <strong>{{ $learner->admission_number }}</strong></p>
+                            <p>{{ __('Admission number:') }} <strong>{{ $learner->admission_number }}</strong></p>
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-md-6 col-sm-12">
+                            <p>{{ __('No Assessment') }} - <strong>{{ __('NA') }}</strong> (0 Points)</p>
+                        </div>
                         @foreach($levels as $level)
                             <div class="col-md-6 col-sm-12">
                                 <p>{{ $level->title }} - <strong>{{ initials($level->title) }}</strong> ({{ $level->points }} Points)</p>
@@ -65,7 +68,7 @@
                     </div>
                     <div class="row">
                         <div class="col-12 text-center">
-                            <p>Term: {{ $term->term }} - {{ $term->year }}
+                            <p>{{ __('Term:') }} {{ $term->term }} - {{ $term->year }}
                                 ({{ \Carbon\Carbon::parse($term->start_date)->format('d M, Y') }}
                                 - {{ \Carbon\Carbon::parse($term->end_date)->format('d M, Y') }})</p>
                         </div>

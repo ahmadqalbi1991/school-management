@@ -28,6 +28,7 @@
     .pdf-wrapper {
         font-family: sans-serif;
         padding: 0 25px;
+        font-size: 14px;
     }
 
     .term-details {
@@ -36,13 +37,20 @@
         font-size: 16px;
     }
 
-    .learners-details {
+    .learners-details, .levels-details {
         width: 100%;
+        margin: 25px 0;
+        text-align: center;
     }
 
     .learners-details p {
-        float: left;
+        display: initial;
         padding: 0 10px;
+    }
+
+    .levels-details p {
+        display: initial;
+        padding: 0 20px;
     }
 
     .date-generated {
@@ -92,14 +100,22 @@
     }
 
     .signatures > div {
-        width: 45%;
+        width: 50%;
         float: left;
+        font-size: 18px;
     }
 
     .border {
         height: 50px;
         border-bottom: 1px solid;
         width: 150px;
+    }
+
+    footer {
+        font-size: 14px !important;
+        width: 100%;
+        line-height: 50px;
+        text-align: right;
     }
 </style>
 <div class="pdf-wrapper">
@@ -123,6 +139,11 @@
         <p><strong>{{ __('Admission') }} #: </strong>{{ $learner->admission_number }}</p>
         <p><strong>{{ __('Class') }}: </strong>{{ $stream->school_class->class }}</p>
         <p><strong>{{ __('Stream') }}: </strong>{{ $stream->title }}</p>
+    </div>
+    <div class="levels-details">
+        @foreach($levels as $level)
+            <p>&#x2022; {{ $level->title }} - <strong>{{ initials($level->title) }}</strong> ({{ $level->points }} Points)</p>
+        @endforeach
     </div>
     <div class="date-generated">Date Generated: {{ \Carbon\Carbon::now()->format('d/m/Y') }}</div>
     <div class="subjects-table">
@@ -175,4 +196,7 @@
             <p>Principle</p>
         </div>
     </div>
+    <footer>
+        <p>Powered by CRE.CO.KE</p>
+    </footer>
 </div>

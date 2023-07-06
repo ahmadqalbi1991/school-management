@@ -3,7 +3,6 @@
 use App\Models\PerformanceLevel;
 use App\Models\School;
 use App\Models\SchoolAdmins;
-use App\Models\StudentAssessment;
 use Illuminate\Support\Facades\Auth;
 
 function getSchoolSettings()
@@ -11,9 +10,12 @@ function getSchoolSettings()
     return School::where('id', Auth::user()->school_id)->first();
 }
 
-function getSchoolAdmins()
+function getSchoolAdmins($id = null)
 {
-    $admins = SchoolAdmins::where('school_id', Auth::user()->school_id)->get();
+    if ($id === null) {
+        $id = Auth::user()->school_id;
+    }
+    $admins = SchoolAdmins::where('school_id', $id)->get();
     return $admins->pluck('admin_id')->toArray();
 }
 

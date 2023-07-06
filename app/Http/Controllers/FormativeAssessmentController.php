@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\EmailJob;
 use App\Models\ClassSubject;
+use App\Models\LearnerSubject;
 use App\Models\PerformanceLevel;
 use App\Models\SchoolClass;
 use App\Models\Strand;
@@ -15,11 +16,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Auth;
-use Illuminate\Support\Facades\Storage;
 use PDF;
 use Response;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class FormativeAssessmentController extends Controller
@@ -62,10 +60,17 @@ class FormativeAssessmentController extends Controller
                     'slug' => $stream_slug,
                     'class_id' => $class->id
                 ])->first();
+                $assigned_learners = LearnerSubject::where([
+                    'class_id' => $class->id,
+                    'stream_id' => $stream->id,
+                    'subject_id' => $subject->id
+                ])->get();
                 $learners = User::where([
                     'school_id' => Auth::user()->school_id,
                     'stream_id' => $stream->id
-                ])->get();
+                ])
+                    ->whereIn('id', $assigned_learners->pluck('learner_id')->toArray())
+                    ->get();
                 $levels = PerformanceLevel::when(in_array(Auth::user()->role, ['admin', 'teacher']), function ($q) use ($admins) {
                     return $q->whereIn('created_by', $admins);
                 })->latest()->get();
@@ -172,7 +177,7 @@ class FormativeAssessmentController extends Controller
                     $output = '';
                     if ($hasManagePermission) {
                         $output = '<div class="">
-                                    <a href="' . route('reports.download-pdf', ['learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id]) . '"><i class="fas fa-file-pdf f-16 text-pink"></i></a>
+                                    <a target="_blank" href="' . route('reports.download-pdf', ['learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id]) . '"><i class="fas fa-file-pdf f-16 text-pink"></i></a>
                                     <a href="' . route('reports.download-pdf', ['learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id, 'send_email' => true]) . '"><i class="fas fa-envelope f-16 text-blue"></i></a>
                                     <a href="' . route('reports.view-subjects', [
                                 'learner_id' => $data->id, 'stream_id' => $request->stream_id, 'term_id' => $request->term_id]) . '">
@@ -207,8 +212,16 @@ class FormativeAssessmentController extends Controller
                 })
                 ->first();
 
+            $learner_subjects = LearnerSubject::where([
+                'class_id' => $stream->school_class->id,
+                'stream_id' => $stream->id,
+                'learner_id' => $learner_id
+            ])
+                ->with('subject')
+                ->get();
+
             $result = [];
-            foreach ($stream->school_class->class_subjects as $subject) {
+            foreach ($learner_subjects as $subject) {
                 $strands = Strand::where('subject_id', $subject->subject->id)
                     ->with('sub_strands', function ($q) {
                         return $q->with('learning_activities');
@@ -238,15 +251,17 @@ class FormativeAssessmentController extends Controller
                     ->whereIn('learning_activity_id', $learning_activities_ids)
                     ->get();
 
-                $attempted_points = $attempted_activities->pluck('level')->pluck('points')->sum() / ($total_learning_activities ? $total_learning_activities : 1);
+                if ($attempted_activities->count()) {
+                    $attempted_points = $attempted_activities->pluck('level')->pluck('points')->sum() / ($total_learning_activities ? $total_learning_activities : 1);
 
-                $result[] = [
-                    'id' => $subject->subject->id,
-                    'name' => $subject->subject->title,
-                    'total_learning_activity' => $total_learning_activities,
-                    'attempted_activities' => $attempted_activities->pluck('level')->pluck('points')->count(),
-                    'attempted_points' => round($attempted_points, 2),
-                ];
+                    $result[] = [
+                        'id' => $subject->subject->id,
+                        'name' => $subject->subject->title,
+                        'total_learning_activity' => $total_learning_activities,
+                        'attempted_activities' => $attempted_activities->pluck('level')->pluck('points')->count(),
+                        'attempted_points' => round($attempted_points, 2),
+                    ];
+                }
             }
 
             $learner = User::find($learner_id);
@@ -347,8 +362,16 @@ class FormativeAssessmentController extends Controller
                 })
                 ->first();
 
+            $learner_subjects = LearnerSubject::where([
+                'class_id' => $stream->school_class->id,
+                'stream_id' => $stream->id,
+                'learner_id' => $learner_id
+            ])
+                ->with('subject')
+                ->get();
+
             $result = [];
-            foreach ($stream->school_class->class_subjects as $subject) {
+            foreach ($learner_subjects as $subject) {
                 $strands = Strand::where('subject_id', $subject->subject->id)
                     ->with('sub_strands', function ($q) {
                         return $q->with('learning_activities');
@@ -378,28 +401,34 @@ class FormativeAssessmentController extends Controller
                     ->whereIn('learning_activity_id', $learning_activities_ids)
                     ->get();
 
-                $attempted_points = $attempted_activities->pluck('level')->pluck('points')->sum() / ($total_learning_activities ? $total_learning_activities : 1);
+                if ($attempted_activities->count()) {
+                    $attempted_points = $attempted_activities->pluck('level')->pluck('points')->sum() / ($total_learning_activities ? $total_learning_activities : 1);
 
-                $result[] = [
-                    'id' => $subject->subject->id,
-                    'name' => $subject->subject->title,
-                    'total_learning_activity' => $total_learning_activities,
-                    'attempted_activities' => $attempted_activities->pluck('level')->pluck('points')->count(),
-                    'attempted_points' => round($attempted_points, 2),
-                ];
+                    $result[] = [
+                        'id' => $subject->subject->id,
+                        'name' => $subject->subject->title,
+                        'total_learning_activity' => $total_learning_activities,
+                        'attempted_activities' => $attempted_activities->pluck('level')->pluck('points')->count(),
+                        'attempted_points' => round($attempted_points, 2),
+                    ];
+                }
             }
 
             $learner = User::find($learner_id);
             $term = Term::find($term_id);
+            $admins = getSchoolAdmins($school->id);
+            $levels = PerformanceLevel::whereIn('created_by', $admins)->latest()->get();
             $data = [
                 'school' => $school,
                 'stream' => $stream,
                 'term' => $term,
                 'learner' => $learner,
-                'results' => $result
+                'results' => $result,
+                'levels' => $levels,
+                'admins' => $admins
             ];
 
-            $pdf = \PDF::loadView('pdfs.result', $data);
+            $pdf = PDF::loadView('pdfs.result', $data);
             if ($send_email) {
                 $content = $pdf->output();
                 \Storage::put('public/reports/' . $learner->name . '/' . 'report_card_' . $term->term . '.pdf', $content);
