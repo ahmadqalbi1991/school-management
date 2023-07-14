@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\School;
 use App\Models\SchoolAdmins;
+use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -36,7 +37,6 @@ class SchoolController extends Controller
     public function getList()
     {
         $data = School::latest()->get();
-//        dd($data->toArray());
         $hasManagePermission = Auth::user()->can('manage_settings');
 
         return Datatables::of($data)
@@ -89,7 +89,10 @@ class SchoolController extends Controller
     public function create()
     {
         try {
-            $admins = User::where(['role' => 'admin', 'status' => 'active'])->get();
+            $admins = User::where(['role' => 'admin', 'status' => 'active'])
+                ->with('school_admins')
+                ->doesntHave('school_admins')
+                ->get();
 
             return view('settings.school.create', compact('admins'));
         } catch (\Exception $e) {
@@ -158,7 +161,11 @@ class SchoolController extends Controller
         try {
             $school = School::where(['id' => $id])->with('admins')->first();
             $selected_admins = $school->admins->pluck('admin_id')->toArray();
-            $admins = User::where(['role' => 'admin', 'status' => 'active'])->get();
+            $admins = User::where(['role' => 'admin', 'status' => 'active'])
+                ->with('school_admins', function ($q) use ($selected_admins) {
+                    return $q->whereIn('admin_id', $selected_admins);
+                })
+                ->get();
 
             return view('settings.school.edit', compact('admins', 'school', 'selected_admins'));
         } catch (\Exception $e) {
@@ -223,6 +230,30 @@ class SchoolController extends Controller
             $school->delete();
 
             return redirect()->route('settings.schools.index')->with('success', 'School deleted successfully');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse|string
+     */
+    public function getClasses(Request $request, $id) {
+        try {
+            if ($request->has('teacher') && $request->get('teacher')) {
+                $teacher = User::where('id', $id)->first();
+                $id = $teacher->school_id;
+            }
+            $classes = SchoolClass::where('school_id', $id)->get();
+            $html = '<option value="">Select Class</option>';
+
+            foreach ($classes as $class) {
+                $html .= '<option value="' . $class->id . '">' . $class->class . '</option>';
+            }
+
+            return $html;
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

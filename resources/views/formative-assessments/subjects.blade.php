@@ -36,10 +36,10 @@
                 <div class="row">
                     @foreach($subjects as $subject)
                         <div class="col-md-3 col-sm-12">
-                            <a href="{{ route('formative-assessments.index', ['class' => $class_slug, 'stream' => $stream_slug, 'subject' => $subject->subject->slug]) }}">
+                            <a href="{{ route('formative-assessments.index', ['class' => $class_slug, 'stream' => $stream_slug, 'subject' => $subject->slug]) }}">
                                 <div class="class-wrapper">
                                     <h3><i class="fas fa-book-open"></i></h3>
-                                    <p>{{ $subject->subject->title }}</p>
+                                    <p>{{ $subject->title }}</p>
                                 </div>
                             </a>
                         </div>

@@ -31,6 +31,7 @@
             },
             columns: [
                 {data:'title', name: 'title', orderable: false},
+                {data:'class', name: 'class'},
                 {data:'action', name: 'action'}
             ],
             buttons: [

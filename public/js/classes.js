@@ -31,6 +31,7 @@
             },
             columns: [
                 {data:'class', name: 'class', orderable: false},
+                {data:'school', name: 'school'},
                 {data:'action', name: 'action'},
             ],
             buttons: [

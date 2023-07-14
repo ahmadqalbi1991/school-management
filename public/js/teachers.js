@@ -23,7 +23,7 @@
             pagingType: "full_numbers",
             dom: "<'row'<'col-sm-2'l><'col-sm-7 text-center'B><'col-sm-3'f>>tipr",
             ajax: {
-                url: 'teachers/get-list',
+                url: '/teachers/get-list',
                 type: "get",
                 headers: {
                     'X-CSRF-TOKEN': token
@@ -140,5 +140,42 @@
             }
         });
     });
+
+    $('#teacher_id').on('change', function () {
+        $.ajax({
+            url: '/get-school-classes/' + $(this).val() + '?teacher=1',
+            type: 'GET',
+            success: function (response) {
+                $('#class_id').html(response).select2()
+                $('#class_id').prop('disabled', false)
+            }
+        })
+    })
+
+    $('#class_id').on('change', function () {
+        $.ajax({
+            url: '/get-streams/' + $(this).val(),
+            type: 'GET',
+            success: function (response) {
+                $('#stream_id').html(response.streams).select2()
+                $('#stream_id').prop('disabled', false)
+                $('#subject_id').html(response.subjects).select2()
+                $('#subject_id').prop('disabled', false)
+            }
+        })
+    })
+
+    $('#class_id_subjects').on('change', function () {
+        $.ajax({
+            url: '/get-streams/' + $(this).val(),
+            type: 'GET',
+            success: function (response) {
+                $('#subject_id').html(response.subjects).select2()
+                $('#subject_id').prop('disabled', false)
+            }
+        })
+    })
+
+    $('#teacher_detail_table').DataTable();
     $('select').select2();
 })(jQuery);

@@ -131,7 +131,7 @@
         </div>
     </div>
     <div class="term-details">
-        <p>{{ $term->term }}, {{ $term->year }}</p>
+        <p>{{ $term->term }}, {{ $term->year }} ({{ \Carbon\Carbon::parse($term->start_date)->format('d M, Y') }} - {{ \Carbon\Carbon::parse($term->end_date)->format('d M, Y') }})</p>
         <h4>{{ __('Formative Assessment Summary Report') }}</h4>
     </div>
     <div class="learners-details">

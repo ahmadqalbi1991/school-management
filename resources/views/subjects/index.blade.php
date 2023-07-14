@@ -58,11 +58,11 @@
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
-                                            <label for="classes">{{ __('Classes')}}<span class="text-red">*</span></label>
-                                            <select name="classes[]" id="classes" multiple class="form-control select2">
+                                            <label for="class_id">{{ __('Classes')}}<span class="text-red">*</span></label>
+                                            <select name="class_id" id="class_id" class="form-control select2">
                                                 <option value="">{{ __('Select Classes') }}</option>
                                                 @foreach($classes as $class)
-                                                    <option @if(in_array($class->id, $selected_classes)) selected @endif value="{{ $class->id }}">{{ $class->class }}</option>
+                                                    <option @if(!empty($subject) && $subject->class_id === $class->id) selected @endif value="{{ $class->id }}">{{ $class->class }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -88,6 +88,7 @@
                             <thead>
                             <tr>
                                 <th>{{ __('Name')}}</th>
+                                <th>{{ __('Class')}}</th>
                                 <th>{{ __('Action')}}</th>
                             </tr>
                             </thead>

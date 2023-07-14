@@ -72,12 +72,17 @@
                         </a>
                     </div>
                 @endcan
-                @can('manage_students_subjects')
-                    <div class="nav-item {{ ($segment1 == 'students-subjects') ? 'active' : '' }}">
-                        <a href="{{route('teachers.index')}}">
-                            <i class="ik ik-user"></i>
-                            <span>{{ __('Teachers')}}</span>
-                        </a>
+                @can('manage_teachers')
+                    <div
+                        class="nav-item {{ ($segment1 == 'teachers') ? 'active open' : '' }} has-sub">
+                        <a href="#"><i class="ik ik-user"></i><span>{{ __('Teachers')}}</span></a>
+                        <div class="submenu-content">
+                            <!-- only those have manage_user permission will get access -->
+                            @can('manage_teachers')
+                                <a href="{{ route('teachers.index') }}"
+                                   class="menu-item {{ ($segment1 == 'teachers') ? 'active' : '' }}">{{ __('Teachers List')}}</a>
+                            @endcan
+                        </div>
                     </div>
                 @endcan
                 @can('manage_learners')

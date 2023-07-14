@@ -77,6 +77,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', [TeacherController::class, 'store'])->name('store');
         Route::post('/update/{id}', [TeacherController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [TeacherController::class, 'destroy'])->name('delete');
+        Route::get('/view/{id}', [TeacherController::class, 'show'])->name('show');
         Route::get('/change-status/{id}', [TeacherController::class, 'changeStatus'])->name('change-status');
     });
 
@@ -139,7 +140,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/update-learners-subjects', [LearnerController::class, 'updateLearnerSubjects'])->name('update');
     });
 
-
+    Route::get('/get-school-classes/{id}', [SchoolController::class, 'getClasses']);
     Route::get('/get-streams/{id}', [ClassesController::class, 'getStreams']);
     Route::get('/get-sub-strands/{id}', [StrandController::class, 'getSubStrands']);
     Route::get('/get-learning-activities/{id}', [SubStrandController::class, 'getLearningActivities']);
@@ -151,6 +152,14 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', [ClassesController::class, 'store'])->name('store');
         Route::post('/update/{id}', [ClassesController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [ClassesController::class, 'destroy'])->name('delete');
+    });
+
+    Route::group(['middleware' => 'can:manage_assigned_teachers', 'as' => 'teachers.', 'prefix' => 'teachers'], function () {
+        Route::get('/manage-assigned-teachers', [TeacherController::class, 'manageTeachers'])->name('manage-assigned-teachers');
+        Route::post('/save-manage-assigned-teachers', [TeacherController::class, 'saveManageTeachers'])->name('save-manage-assigned-teachers');
+        Route::post('/save-manage-assigned-teachers-subjects', [TeacherController::class, 'saveManageTeachersSubjects'])->name('save-manage-assigned-teachers-subjects');
+        Route::get('/remove/{id}', [TeacherController::class, 'removeClass'])->name('remove-class');
+        Route::get('/remove-subject/{id}', [TeacherController::class, 'removeSubject'])->name('remove-subject');
     });
 
     Route::group(['middleware' => 'can:manage_streams', 'as' => 'streams.', 'prefix' => 'streams'], function () {
@@ -219,7 +228,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/role/delete/{id}', [RolesController::class, 'delete']);
     });
 
-
     //only those have manage_permission permission will get access
     Route::group(['middleware' => 'can:manage_permission|manage_user'], function () {
         Route::get('/permission', [PermissionController::class, 'index']);
@@ -231,7 +239,6 @@ Route::group(['middleware' => 'auth'], function () {
 
     // get permissions
     Route::get('get-role-permissions-badge', [PermissionController::class, 'getPermissionBadgeByRole']);
-
 
     // permission examples
     Route::get('/permission-example', function () {

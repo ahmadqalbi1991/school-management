@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassSubject;
+use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Stream;
+use App\Models\Subjects;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Auth;
@@ -22,10 +24,12 @@ class ClassesController extends Controller
     {
         try {
             $class = null;
+            $schools = School::where('active', 1)->get();
             if ($request->has('edit') && $request->get('pass_key')) {
                 $class = SchoolClass::where(['id' => $request->get('pass_key')])->first();
             }
-            return view('classes.index', compact('class'));
+
+            return view('classes.index', compact('class', 'schools'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -43,6 +47,13 @@ class ClassesController extends Controller
         $hasManagePermission = Auth::user()->can('manage_classes');
 
         return Datatables::of($data)
+            ->addColumn('school', function ($data) {
+                $school_name = '';
+                if (!empty($data->school)) {
+                    $school_name = $data->school->school_name;
+                }
+                return $school_name;
+            })
             ->addColumn('action', function ($data) use ($hasManagePermission) {
                 $output = '';
                 if ($hasManagePermission) {
@@ -155,8 +166,7 @@ class ClassesController extends Controller
     public function getStreams($id) {
         try {
             $streams = Stream::where('class_id', $id)->get();
-            $subjects = ClassSubject::where('class_id', $id)
-                ->with('subject')
+            $subjects = Subjects::where('class_id', $id)
                 ->get();
 
             $stream_html = '<option value="">Select Stream</option>';
@@ -166,7 +176,7 @@ class ClassesController extends Controller
             }
 
             foreach ($subjects as $subject) {
-                $subjects_html .= '<option value="' . $subject->subject->id . '">' . $subject->subject->title . '</option>';
+                $subjects_html .= '<option value="' . $subject->id . '">' . $subject->title . '</option>';
             }
 
             return ['streams' => $stream_html, 'subjects' => $subjects_html];

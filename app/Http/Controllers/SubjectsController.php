@@ -22,14 +22,14 @@ class SubjectsController extends Controller
     {
         try {
             $subject = null;
-            $selected_classes = [];
             if ($request->has('edit') && $request->get('pass_key')) {
-                $subject = Subjects::where(['id' => $request->get('pass_key')])->with('classes')->first();
-                $selected_classes = $subject->classes->pluck('class_id')->toArray();
+                $subject = Subjects::where(['id' => $request->get('pass_key')])->first();
             }
-            $classes = SchoolClass::all();
+            $classes = SchoolClass::when(Auth::user()->role === 'admin', function ($q) {
+                return $q->where('school_id', Auth::user()->school_id);
+            })->get();
 
-            return view('subjects.index', compact('subject', 'classes', 'selected_classes'));
+            return view('subjects.index', compact('subject', 'classes'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -43,10 +43,18 @@ class SubjectsController extends Controller
      */
     public function getList()
     {
-        $data = Subjects::latest()->get();
+        $data = Subjects::with('school_class')->latest()->get();
         $hasManagePermission = Auth::user()->can('manage_subjects');
 
         return Datatables::of($data)
+            ->addColumn('class', function ($data) {
+                $class = '';
+                if (!empty($data->school_class)) {
+                    $class = $data->school_class->class;
+                }
+
+                return $class;
+            })
             ->addColumn('action', function ($data) use ($hasManagePermission) {
                 $output = '';
                 if ($hasManagePermission) {
@@ -72,21 +80,9 @@ class SubjectsController extends Controller
     {
         try {
             $input = $request->except('_token');
-            $classes = $input['classes'];
-            unset($input['classes']);
             $input['slug'] = Str::slug($input['title']);
+            Subjects::create($input);
 
-            $subject = Subjects::create($input);
-            if ($subject) {
-                $classesObj = [];
-                foreach ($classes as $class) {
-                    $classesObj[] = [
-                        'subject_id' => $subject->id,
-                        'class_id' => $class
-                    ];
-                }
-                ClassSubject::insert($classesObj);
-            }
             return redirect()->back()->with('success', 'Subject added successfully');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
@@ -105,22 +101,9 @@ class SubjectsController extends Controller
     {
         try {
             $input = $request->except('_token');
-            $classes = $input['classes'];
-            unset($input['classes']);
             $input['slug'] = Str::slug($input['title']);
+            Subjects::where('id', $id)->update($input);
 
-            $subject = Subjects::where('id', $id)->update($input);
-            if ($subject) {
-                ClassSubject::where('subject_id', $id)->delete();
-                $classesObj = [];
-                foreach ($classes as $class) {
-                    $classesObj[] = [
-                        'subject_id' => $id,
-                        'class_id' => $class
-                    ];
-                }
-                ClassSubject::insert($classesObj);
-            }
             return redirect()->back()->with('success', 'Subject updated successfully');
         } catch (\Exception $e) {
             $bug = $e->getMessage();

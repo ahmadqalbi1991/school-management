@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\EmailJob;
+use App\Models\AssignedSubject;
 use App\Models\School;
+use App\Models\SchoolClass;
+use App\Models\TeacherManagement;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Auth;
@@ -48,6 +51,7 @@ class TeacherController extends Controller
             })
             ->get();
         $hasManagePermission = Auth::user()->can('manage_teachers');
+        $hasManageTeachers = Auth::user()->can('manage_assigned_teachers');
 
         return Datatables::of($data)
             ->addColumn('name', function ($data) {
@@ -71,13 +75,16 @@ class TeacherController extends Controller
                 }
                 return '<span class="badge badge-' . $status . ' m-1">' . ucfirst($data->status) . '</span>';
             })
-            ->addColumn('action', function ($data) use ($hasManagePermission) {
+            ->addColumn('action', function ($data) use ($hasManagePermission, $hasManageTeachers) {
                 $output = '';
                 if ($hasManagePermission) {
-                    $output = '<div class="">
-                                    <a href="' . route('teachers.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-edit f-16 text-blue"></i></a>
-                                    <a href="' . route('teachers.delete', ['id' => $data->id]) . '"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                </div>';
+                    $output .= '<div class="">';
+                    $output .= '<a href="' . route('teachers.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-edit f-16 text-blue"></i></a>';
+                    $output .= '<a href="' . route('teachers.delete', ['id' => $data->id]) . '"><i class="ik ik-trash-2 f-16 text-red"></i></a>';
+                    if ($hasManageTeachers) {
+                        $output .= '<a href="' . route('teachers.show', ['id' => $data->id]) . '"><i class="ik ik-eye f-16 text-green"></i></a>';
+                    }
+                    $output .= '</div>';
                 }
 
                 return $output;
@@ -89,7 +96,7 @@ class TeacherController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
@@ -133,8 +140,8 @@ class TeacherController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
      * @return Response
      */
     public function update(Request $request, $id)
@@ -162,7 +169,7 @@ class TeacherController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
      * @return Response
      */
     public function destroy($id)
@@ -175,6 +182,138 @@ class TeacherController extends Controller
             $teacher->delete();
 
             return redirect()->route('teachers.index')->with('success', 'Teacher deleted successfully');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function manageTeachers()
+    {
+        try {
+            $teachers = User::where([
+                'status' => 'active',
+                'role' => 'teacher'
+            ])
+                ->when(Auth::user()->role === 'admin', function ($q) {
+                    return $q->where('school_id', Auth::user()->school_id);
+                })->get();
+
+            return view('teachers.manage-teachers', compact('teachers'));
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function show($id)
+    {
+        try {
+            $teachers = User::where([
+                'status' => 'active',
+                'role' => 'teacher'
+            ])
+                ->when(Auth::user()->role === 'admin', function ($q) {
+                    return $q->where('school_id', Auth::user()->school_id);
+                })->get();
+            $teacher = User::findOrFail($id);
+            $records = TeacherManagement::where('teacher_id', $id)
+                ->with(['class', 'stream'])
+                ->get();
+            $subjects = AssignedSubject::with('subject')->where('teacher_id', $id)->get();
+            $classes = SchoolClass::where('school_id', Auth::user()->school_id)->get();
+
+            return view('teachers.detail', compact('teacher', 'records', 'subjects', 'teachers', 'classes'));
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function saveManageTeachers(Request $request)
+    {
+        try {
+            $input = $request->except('_token');
+
+            $exist = TeacherManagement::where($input)->first();
+            if ($exist) {
+                return back()->with('error', 'Teacher already assigned to class and stream');
+            }
+            TeacherManagement::create($input);
+
+            return back()->with('success', 'Teacher added to class');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function saveManageTeachersSubjects(Request $request)
+    {
+        try {
+            $input = $request->except('_token');
+            $subject_ids = $input['subject_ids'];
+            unset($input['subject_ids']);
+            $exist = TeacherManagement::where($input)->first();
+            if (!$exist) {
+                return back()->with('error', 'Teacher is not assigned to class');
+            }
+
+            foreach ($subject_ids as $id) {
+                $assigned = AssignedSubject::where(['teacher_id' => $input['teacher_id'], 'subject_id' => $id])->first();
+                if (!$assigned) {
+                    AssignedSubject::create(['teacher_id' => $input['teacher_id'], 'subject_id' => $id]);
+                }
+            }
+
+            return back()->with('success', 'Subjects added');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function removeClass($id)
+    {
+        try {
+            TeacherManagement::where('id', $id)->delete();
+
+            return back()->with('success', 'Teacher removed');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function removeSubject($id)
+    {
+        try {
+            AssignedSubject::where('id', $id)->delete();
+
+            return back()->with('success', 'Subject removed');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

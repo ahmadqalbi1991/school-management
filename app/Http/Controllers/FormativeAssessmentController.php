@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\EmailJob;
+use App\Models\AssignedSubject;
 use App\Models\ClassSubject;
 use App\Models\LearnerSubject;
 use App\Models\PerformanceLevel;
@@ -11,6 +12,7 @@ use App\Models\Strand;
 use App\Models\Stream;
 use App\Models\StudentAssessment;
 use App\Models\Subjects;
+use App\Models\TeacherManagement;
 use App\Models\Term;
 use App\Models\User;
 use Carbon\Carbon;
@@ -32,7 +34,10 @@ class FormativeAssessmentController extends Controller
     {
         try {
             if (!$stream_slug && !$class_slug) {
+                $assigned_streams = TeacherManagement::where('teacher_id', Auth::id())->get();
+                $assigned_ids = $assigned_streams->pluck('stream_id')->toArray();
                 $streams = Stream::where('school_id', Auth::user()->school_id)
+                    ->whereIn('id', $assigned_ids)
                     ->with('school_class')
                     ->get();
                 return view('formative-assessments.streams', compact('streams'));
@@ -40,9 +45,23 @@ class FormativeAssessmentController extends Controller
 
             if ($class_slug && $stream_slug && !$subject_slug) {
                 $classObj = SchoolClass::where('slug', $class_slug)->first();
-                $subjects = ClassSubject::where('class_id', $classObj->id)
-                    ->with('subject')
+                $assigned_subjects = AssignedSubject::where('teacher_id', Auth::id())->get();
+                $assigned_ids = $assigned_subjects->pluck('subject_id')->toArray();
+                $subjects = Subjects::where('class_id', $classObj->id)
+                    ->whereIn('id', $assigned_ids)
                     ->get();
+                $stream = Stream::where('school_id', Auth::user()->school_id)
+                    ->where('slug', $stream_slug)
+                    ->first();
+                $exist = TeacherManagement::where([
+                    'teacher_id' => Auth::id(),
+                    'stream_id' => $stream->id,
+                    'class_id' => $classObj->id
+                ])->first();
+
+                if (!$exist) {
+                    return redirect()->back()->with('error', 'You don`t have access to this page');
+                }
 
                 return view('formative-assessments.subjects', compact('subjects', 'class_slug', 'stream_slug'));
             }
@@ -54,6 +73,10 @@ class FormativeAssessmentController extends Controller
                     })
                     ->with('strands')
                     ->first();
+                $exist = AssignedSubject::where(['teacher_id' => Auth::id(), 'subject_id' => $subject->id])->first();
+                if (!$exist) {
+                    return redirect()->back()->with('error', 'You don`t have access to this page');
+                }
                 $admins = getSchoolAdmins();
                 $class = SchoolClass::where('slug', $class_slug)->first();
                 $stream = Stream::where([
