@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Exam;
-use App\Models\Term;
+use App\Models\SummativePerformnceLevel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
-use Auth;
 
-class TermsController extends Controller
+class SummativePerformanceLevelsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -19,14 +18,22 @@ class TermsController extends Controller
     public function index(Request $request)
     {
         try {
-            $term = null;
+            $level = null;
             if ($request->has('edit') && $request->get('pass_key')) {
-                $term = Term::where(['id' => $request->get('pass_key')])->first();
+                $level = SummativePerformnceLevel::where(['id' => $request->get('pass_key')])->first();
+            }
+            $admins = getSchoolAdmins();
+            $min = SummativePerformnceLevel::whereIn('created_by', $admins)->max('max_point');
+            if (!$min) {
+                $min = 0;
+            } else {
+                $min += 1;
             }
 
-            return view('terms.index', compact('term'));
+            return view('summative-performance-levels.index', compact('level', 'min'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
+
             return redirect()->back()->with('error', $bug);
         }
     }
@@ -38,16 +45,22 @@ class TermsController extends Controller
      */
     public function getList()
     {
-        $data = Term::where('school_id', Auth::user()->school_id)->latest()->get();
-        $hasManagePermission = Auth::user()->can('manage_terms');
+        $admins = getSchoolAdmins();
+        $data = SummativePerformnceLevel::when(in_array(Auth::user()->role, ['admin', 'teacher']), function ($q) use ($admins) {
+            return $q->whereIn('created_by', $admins);
+        })->latest()->get();
+        $hasManagePermission = Auth::user()->can('manage_summative_performance_levels');
 
         return Datatables::of($data)
+            ->addColumn('points', function ($data) {
+                return $data->min_point . ' - ' . $data->max_point;
+            })
             ->addColumn('action', function ($data) use ($hasManagePermission) {
                 $output = '';
                 if ($hasManagePermission) {
                     $output = '<div class="">
-                                    <a href="' . route('terms.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-edit f-16 text-blue"></i></a>
-                                    <a href="' . route('terms.delete', ['id' => $data->id]) . '"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                                    <a href="' . route('summative-performance-levels.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-edit f-16 text-blue"></i></a>
+                                    <a href="' . route('summative-performance-levels.delete', ['id' => $data->id]) . '"><i class="ik ik-trash-2 f-16 text-red"></i></a>
                                 </div>';
                 }
 
@@ -76,12 +89,13 @@ class TermsController extends Controller
     {
         try {
             $input = $request->except('_token');
-            $input['school_id'] = Auth::user()->school_id;
+            $input['created_by'] = Auth::id();
+            SummativePerformnceLevel::create($input);
 
-            Term::create($input);
-            return redirect()->back()->with('success', 'Term added successfully');
+            return redirect()->back()->with('success', 'Performance Level Created');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
+
             return redirect()->back()->with('error', $bug);
         }
     }
@@ -103,20 +117,9 @@ class TermsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function getExams($id)
+    public function edit($id)
     {
-        try {
-            $exams = Exam::where('term_id', $id)->get();
-            $option = '<option>Select Exam</option>';
-            foreach ($exams as $exam) {
-                $option .= '<option value="' . $exam->id . '">' . $exam->title . '</option>';
-            }
-
-            return $option;
-        } catch (\Exception $e) {
-            $bug = $e->getMessage();
-            return redirect()->back()->with('error', $bug);
-        }
+        //
     }
 
     /**
@@ -130,12 +133,12 @@ class TermsController extends Controller
     {
         try {
             $input = $request->except('_token');
-            $input['school_id'] = Auth::user()->school_id;
+            SummativePerformnceLevel::where('id', $id)->update($input);
 
-            Term::where('id', $id)->update($input);
-            return redirect()->back()->with('success', 'Term updated successfully');
+            return redirect()->route('summative-performance-levels.index')->with('success', 'Performance Level Updated');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
+
             return redirect()->back()->with('error', $bug);
         }
     }
@@ -149,13 +152,12 @@ class TermsController extends Controller
     public function destroy($id)
     {
         try {
-            $term = Term::where('id', $id)->first();
-            $term->subjects()->delete();
-            $term->delete();
+            SummativePerformnceLevel::where('id', $id)->delete();
 
-            return redirect()->back()->with('success', 'Term deleted successfully');
+            return redirect()->back()->with('success', 'Performance Level Deleted');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
+
             return redirect()->back()->with('error', $bug);
         }
     }

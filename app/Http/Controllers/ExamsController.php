@@ -6,10 +6,10 @@ use App\Models\Exam;
 use App\Models\Term;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
-use Auth;
 
-class TermsController extends Controller
+class ExamsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -19,12 +19,13 @@ class TermsController extends Controller
     public function index(Request $request)
     {
         try {
-            $term = null;
+            $exam = null;
+            $terms = Term::where('school_id', Auth::user()->school_id)->get();
             if ($request->has('edit') && $request->get('pass_key')) {
-                $term = Term::where(['id' => $request->get('pass_key')])->first();
+                $exam = Exam::where(['id' => $request->get('pass_key')])->first();
             }
 
-            return view('terms.index', compact('term'));
+            return view('exams.index', compact('exam', 'terms'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -38,16 +39,19 @@ class TermsController extends Controller
      */
     public function getList()
     {
-        $data = Term::where('school_id', Auth::user()->school_id)->latest()->get();
+        $data = Exam::where('school_id', Auth::user()->school_id)->with('term')->get();
         $hasManagePermission = Auth::user()->can('manage_terms');
 
         return Datatables::of($data)
+            ->addColumn('term', function ($data) use ($hasManagePermission) {
+                return $data->term->term;
+            })
             ->addColumn('action', function ($data) use ($hasManagePermission) {
                 $output = '';
                 if ($hasManagePermission) {
                     $output = '<div class="">
-                                    <a href="' . route('terms.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-edit f-16 text-blue"></i></a>
-                                    <a href="' . route('terms.delete', ['id' => $data->id]) . '"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                                    <a href="' . route('exams.index', ['edit' => 1, 'pass_key' => $data->id]) . '"><i class="ik ik-edit f-16 text-blue"></i></a>
+                                    <a href="' . route('exams.delete', ['id' => $data->id]) . '"><i class="ik ik-trash-2 f-16 text-red"></i></a>
                                 </div>';
                 }
 
@@ -77,9 +81,9 @@ class TermsController extends Controller
         try {
             $input = $request->except('_token');
             $input['school_id'] = Auth::user()->school_id;
+            Exam::create($input);
 
-            Term::create($input);
-            return redirect()->back()->with('success', 'Term added successfully');
+            return redirect()->back()->with('success', 'Exam created successfully');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -103,20 +107,9 @@ class TermsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function getExams($id)
+    public function edit($id)
     {
-        try {
-            $exams = Exam::where('term_id', $id)->get();
-            $option = '<option>Select Exam</option>';
-            foreach ($exams as $exam) {
-                $option .= '<option value="' . $exam->id . '">' . $exam->title . '</option>';
-            }
-
-            return $option;
-        } catch (\Exception $e) {
-            $bug = $e->getMessage();
-            return redirect()->back()->with('error', $bug);
-        }
+        //
     }
 
     /**
@@ -131,9 +124,9 @@ class TermsController extends Controller
         try {
             $input = $request->except('_token');
             $input['school_id'] = Auth::user()->school_id;
+            Exam::where('id', $id)->update($input);
 
-            Term::where('id', $id)->update($input);
-            return redirect()->back()->with('success', 'Term updated successfully');
+            return redirect()->back()->with('success', 'Exam updated successfully');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -149,11 +142,9 @@ class TermsController extends Controller
     public function destroy($id)
     {
         try {
-            $term = Term::where('id', $id)->first();
-            $term->subjects()->delete();
-            $term->delete();
+            Exam::where('id', $id)->delete();
 
-            return redirect()->back()->with('success', 'Term deleted successfully');
+            return redirect()->back()->with('success', 'Exam delete successfully');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

@@ -56,7 +56,6 @@ $(document).ready(function() {
                         })
                     }
 
-                    console.log(checkboxes)
                     checkboxes.prop('disabled', false)
                     $('#save-btn').prop('disabled', false)
                 }

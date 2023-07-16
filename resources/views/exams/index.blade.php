@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Terms')
+@section('title', 'Exams')
 @section('content')
     <!-- push external head elements to head -->
     @push('head')
@@ -18,8 +18,8 @@
                     <div class="page-header-title">
                         <i class="ik ik-unlock bg-blue"></i>
                         <div class="d-inline">
-                            <h5>{{ __('Terms')}}</h5>
-                            <span>{{ __('Term Details')  }}</span>
+                            <h5>{{ __('Exams')}}</h5>
+                            <span>{{ __('Exams Details')  }}</span>
                         </div>
                     </div>
                 </div>
@@ -30,7 +30,7 @@
                                 <a href="{{ route('dashboard') }}"><i class="ik ik-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                <a href="#">{{ __('Terms')}}</a>
+                                <a href="#">{{ __('Exams')}}</a>
                             </li>
                         </ol>
                     </nav>
@@ -43,49 +43,32 @@
             @can('manage_terms')
                 <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header"><h3>{{ __('Add Term')}}</h3></div>
+                        <div class="card-header"><h3>{{ __('Add Exam')}}</h3></div>
                         <div class="card-body">
                             <form class="forms-sample" method="POST" data-parsley-validate
-                                  action="{{ empty($term) ? route('terms.store') : route('terms.update', ['id' => $term->id])}}">
+                                  action="{{ empty($exam) ? route('exams.store') : route('exams.update', ['id' => $exam->id])}}">
                                 @csrf
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <div class="form-group">
-                                            <label for="title">{{ __('Year')}}<span class="text-red">*</span></label>
-                                            <select required name="year" id="year" class="form-control select2">
-                                                <option value="">{{ __('Select Year') }}</option>
-                                                @for($i = \Carbon\Carbon::now()->format('Y'); $i <= \Carbon\Carbon::now()->format('Y') + 100; $i++)
-                                                    <option @if(!empty($term) && $term->year == $i) selected
-                                                            @endif value="{{ $i }}">{{ $i }}</option>
-                                                @endfor
-                                            </select>
+                                            <label for="title">{{ __('Title')}}<span class="text-red">*</span></label>
+                                            <input type="text" name="title" class="form-control" required
+                                                   placeholder="Enter the title of Exam"
+                                                   value="{{ !empty($exam) ? $exam->title : '' }}"
+                                            >
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
-                                            <label for="title">{{ __('Term')}}<span class="text-red">*</span></label>
-                                            <input type="text" value="{{ !empty($term) ? $term->term : '' }}" required
-                                                   class="form-control" name="term" id="title"
-                                                   placeholder="Enter the term">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <label for="start_date">{{ __('Start Date')}}<span class="text-red">*</span></label>
-                                            <input type="date"
-                                                   value="{{ !empty($term) ? $term->start_date : \Carbon\Carbon::now()->format('Y-m-d') }}"
-                                                   required class="form-control" id="start_date"
-                                                   name="start_date">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <label for="end_date">{{ __('End Date')}}<span
+                                            <label for="term_id">{{ __('Details')}}<span
                                                     class="text-red">*</span></label>
-                                            <input type="date"
-                                                   value="{{ !empty($term) ? $term->end_date : \Carbon\Carbon::now()->format('Y-m-d') }}"
-                                                   required class="form-control" id="end_date"
-                                                   name="end_date">
+                                            <select name="term_id" id="term_id" class="select2 form-control">
+                                                <option value="">{{ __('Select Term') }}</option>
+                                                @foreach($terms as $term)
+                                                    <option @if(!empty($exam) && $exam->term_id === $term->id) selected @endif
+                                                        value="{{ $term->id }}">{{ $term->term }} {{ $term->year }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-sm-12 text-right">
@@ -105,13 +88,11 @@
             <div class="col-md-12">
                 <div class="card p-3">
                     <div class="card-body">
-                        <table id="terms_table" class="table">
+                        <table id="exams_tables" class="table">
                             <thead>
                             <tr>
                                 <th>{{ __('Title')}}</th>
-                                <th>{{ __('Start Date')}}</th>
-                                <th>{{ __('End Date')}}</th>
-                                <th>{{ __('Year')}}</th>
+                                <th>{{ __('Term')}}</th>
                                 <th>{{ __('Actions')}}</th>
                             </tr>
                             </thead>
@@ -134,6 +115,6 @@
         <script src="{{ asset('plugins/jquery-minicolors/jquery.minicolors.min.js') }}"></script>
         <script src="{{ asset('plugins/datedropper/datedropper.min.js') }}"></script>
         <!--server side permission table script-->
-        <script src="{{ asset('js/terms.js') }}"></script>
+        <script src="{{ asset('js/exams.js') }}"></script>
     @endpush
 @endsection

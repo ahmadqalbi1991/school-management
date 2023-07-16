@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClassesController;
+use App\Http\Controllers\ExamsController;
 use App\Http\Controllers\FormativeAssessmentController;
 use App\Http\Controllers\LearnerController;
 use App\Http\Controllers\LearningActivitiesController;
@@ -10,6 +11,8 @@ use App\Http\Controllers\StrandController;
 use App\Http\Controllers\StreamController;
 use App\Http\Controllers\SubjectsController;
 use App\Http\Controllers\SubStrandController;
+use App\Http\Controllers\SummativeAssessmentController;
+use App\Http\Controllers\SummativePerformanceLevelsController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TermsController;
 use App\Http\Controllers\TermsSubjectsController;
@@ -124,6 +127,12 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/save-formative-assessment', [FormativeAssessmentController::class, 'save'])->name('save');
     });
 
+    Route::group(['middleware' => 'can:manage_summative_assessments', 'as' => 'summative-assessments.', 'prefix' => 'summative-assessments'], function () {
+        Route::get('/{class?}/{stream?}/{subject?}', [SummativeAssessmentController::class, 'index'])->name('index');
+        Route::post('/save-formative-assessment', [SummativeAssessmentController::class, 'save'])->name('save');
+    });
+
+    Route::post('/get-summative-assessments', [SummativeAssessmentController::class, 'getAssessments']);
     Route::post('/get-assessments', [FormativeAssessmentController::class, 'getAssessments']);
 
     Route::group(['middleware' => 'can:manage_formative_assessments', 'as' => 'reports.', 'prefix' => 'reports'], function () {
@@ -132,6 +141,14 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/view-learner-subjects/{learner_id}/{stream_id}/{term_id}', [FormativeAssessmentController::class, 'viewSubjects'])->name('view-subjects');
         Route::get('/view-learner-result/{subject_id}/{learner_id}/{term_id}/{stream_id}', [FormativeAssessmentController::class, 'viewResult'])->name('view-result');
         Route::get('/download-pdf/{learner_id}/{stream_id}/{term_id}/{send_email?}', [FormativeAssessmentController::class, 'downloadPdf'])->name('download-pdf');
+    });
+
+    Route::group(['middleware' => 'can:manage_summative_assessments', 'as' => 'summative-reports.', 'prefix' => 'summative-reports'], function () {
+        Route::get('/', [SummativeAssessmentController::class, 'learnersView'])->name('index');
+        Route::get('/get-list', [SummativeAssessmentController::class, 'getLearners']);
+        Route::get('/view-learner-subjects/{learner_id}/{stream_id}/{term_id}', [FormativeAssessmentController::class, 'viewSubjects'])->name('view-subjects');
+        Route::get('/view-learner-result/{learner_id}/{term_id}/{stream_id}/{exam_id}', [SummativeAssessmentController::class, 'viewResult'])->name('view-result');
+        Route::get('/download-pdf/{learner_id}/{stream_id}/{term_id}/{exam_id}/{send_email?}', [SummativeAssessmentController::class, 'downloadPdf'])->name('download-pdf');
     });
 
     Route::group(['middleware' => 'can:manage_students_subjects', 'as' => 'learners-subjects.', 'prefix' => 'learners-subjects'], function () {
@@ -145,6 +162,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/get-sub-strands/{id}', [StrandController::class, 'getSubStrands']);
     Route::get('/get-learning-activities/{id}', [SubStrandController::class, 'getLearningActivities']);
     Route::get('/get-learners/{id}', [StreamController::class, 'getLearners']);
+    Route::get('/get-term-exams/{id}', [TermsController::class, 'getExams']);
 
     Route::group(['middleware' => 'can:manage_classes', 'as' => 'classes.', 'prefix' => 'classes'], function () {
         Route::get('/', [ClassesController::class, 'index'])->name('index');
@@ -176,6 +194,14 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', [PerformanceLevelsController::class, 'store'])->name('store');
         Route::post('/update/{id}', [PerformanceLevelsController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [PerformanceLevelsController::class, 'destroy'])->name('delete');
+    });
+
+    Route::group(['middleware' => 'can:manage_summative_performance_levels', 'as' => 'summative-performance-levels.', 'prefix' => 'summative-performance-levels'], function () {
+        Route::get('/', [SummativePerformanceLevelsController::class, 'index'])->name('index');
+        Route::get('/get-list', [SummativePerformanceLevelsController::class, 'getList'])->name('get-list');
+        Route::post('/store', [SummativePerformanceLevelsController::class, 'store'])->name('store');
+        Route::post('/update/{id}', [SummativePerformanceLevelsController::class, 'update'])->name('update');
+        Route::get('/delete/{id}', [SummativePerformanceLevelsController::class, 'destroy'])->name('delete');
     });
 
     Route::group(['middleware' => 'can:manage_strands', 'as' => 'strands.', 'prefix' => 'strands'], function () {
@@ -216,6 +242,15 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', [TermsSubjectsController::class, 'store'])->name('store');
         Route::post('/update/{id}', [TermsSubjectsController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [TermsSubjectsController::class, 'destroy'])->name('delete');
+    });
+
+
+    Route::group(['middleware' => 'can:manage_terms', 'as' => 'exams.', 'prefix' => 'exams'], function () {
+        Route::get('/', [ExamsController::class, 'index'])->name('index');
+        Route::get('/get-list', [ExamsController::class, 'getList'])->name('get-list');
+        Route::post('/store', [ExamsController::class, 'store'])->name('store');
+        Route::post('/update/{id}', [ExamsController::class, 'update'])->name('update');
+        Route::get('/delete/{id}', [ExamsController::class, 'destroy'])->name('delete');
     });
 
     //only those have manage_role permission will get access

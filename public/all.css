@@ -11669,3 +11669,8 @@ div.dt-buttons button.btn.processing:after, div.dt-buttons div.btn.processing:af
     bottom: 0;
     left: 0;
 }
+
+input.radmin-input {
+    border: 1px solid #cbcbcb;
+    border-radius: 3px;
+}

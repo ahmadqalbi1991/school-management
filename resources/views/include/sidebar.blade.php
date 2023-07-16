@@ -2,7 +2,9 @@
     <div class="sidebar-header">
         <a class="header-brand" href="{{route('dashboard')}}">
             <div class="logo-img">
-                <img height="30" src="{{ !empty(getSchoolSettings()->logo) ? asset(getSchoolSettings()->logo) : asset('img/logo_white.png')}}" class="header-brand-img" title="RADMIN">
+                <img height="30"
+                     src="{{ !empty(getSchoolSettings()->logo) ? asset(getSchoolSettings()->logo) : asset('img/logo_white.png')}}"
+                     class="header-brand-img" title="RADMIN">
             </div>
         </a>
         <div class="sidebar-action"><i class="ik ik-arrow-left-circle"></i></div>
@@ -35,6 +37,20 @@
                             <a href="{{route('reports.index')}}">
                                 <i class="fas fa-chart-bar"></i>
                                 <span>{{ __('Formative Reports')}}</span>
+                            </a>
+                        </div>
+                    @endcan
+                    @can('manage_summative_assessments')
+                        <div class="nav-item {{ ($segment1 == 'summative-assessments') ? 'active' : '' }}">
+                            <a href="{{route('summative-assessments.index')}}">
+                                <i class="fas fa-copy"></i>
+                                <span>{{ __('Summative Assessment')}}</span>
+                            </a>
+                        </div>
+                        <div class="nav-item {{ ($segment1 == 'summative-reports') ? 'active' : '' }}">
+                            <a href="{{route('summative-reports.index')}}">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>{{ __('Summative Reports')}}</span>
                             </a>
                         </div>
                     @endcan
@@ -93,9 +109,10 @@
                         </a>
                     </div>
                 @endcan
-                @can('manage_subjects')
+                @if(Auth::user()->role !== 'teacher')
+
                     <div
-                        class="nav-item {{ ($segment1 == 'performance-levels' || $segment1 == 'subjects' || $segment1 == 'strands' || $segment1 == 'sub-strands' || $segment1 == 'learning-activities' || $segment1 == 'terms' || $segment1 == 'term-subjects') ? 'active open' : '' }} has-sub">
+                        class="nav-item {{ ($segment1 == 'exams' || $segment1 == 'summative-performance-levels' || $segment1 == 'performance-levels' || $segment1 == 'subjects' || $segment1 == 'strands' || $segment1 == 'sub-strands' || $segment1 == 'learning-activities' || $segment1 == 'terms' || $segment1 == 'term-subjects') ? 'active open' : '' }} has-sub">
                         <a href="#"><i class="ik ik-book-open"></i><span>{{ __('Subjects')}}</span></a>
                         <div class="submenu-content">
                             <!-- only those have manage_user permission will get access -->
@@ -111,19 +128,25 @@
                                 <a href="{{ route('learning-activities.index') }}"
                                    class="menu-item {{ ($segment1 == 'learning-activities') ? 'active' : '' }}">{{ __('Learning Activities')}}</a>
                             @endcan
-                            @can('manage_terms')
+                            @if(in_array(Auth::user()->role, ['admin']))
                                 <a href="{{ route('terms.index') }}"
                                    class="menu-item {{ ($segment1 == 'terms') ? 'active' : '' }}">{{ __('Terms')}}</a>
                                 <a href="{{ route('term-subjects.index') }}"
                                    class="menu-item {{ ($segment1 == 'term-subjects') ? 'active' : '' }}">{{ __('Term Subjects')}}</a>
-                            @endcan
+                                <a href="{{ route('exams.index') }}"
+                                   class="menu-item {{ ($segment1 == 'exams') ? 'active' : '' }}">{{ __('Exams')}}</a>
+                            @endif
                             @can('manage_performance_levels')
                                 <a href="{{ route('performance-levels.index') }}"
                                    class="menu-item {{ ($segment1 == 'performance-levels') ? 'active' : '' }}">{{ __('Performance Levels')}}</a>
                             @endcan
+                            @can('manage_summative_performance_levels')
+                                <a href="{{ route('summative-performance-levels.index') }}"
+                                   class="menu-item {{ ($segment1 == 'summative-performance-levels') ? 'active' : '' }}">{{ __('Summative Performance Levels')}}</a>
+                            @endcan
                         </div>
                     </div>
-                @endcan
+                @endif
                 @can('manage_settings')
                     <div class="nav-item {{ ($segment1 == 'settings') ? 'active open' : '' }} has-sub">
                         <a href="#"><i class="ik ik-settings"></i><span>{{ __('Settings')}}</span></a>

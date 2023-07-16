@@ -92,6 +92,11 @@ class User extends Authenticatable
         return $this->hasMany(StudentAssessment::class, 'learner_id', 'id');
     }
 
+    public function summative_assessments(): HasMany
+    {
+        return $this->hasMany(SummativeAssessment::class, 'learner_id', 'id');
+    }
+
     public function stream(): BelongsTo
     {
         return $this->belongsTo(Stream::class, 'stream_id', 'id');
