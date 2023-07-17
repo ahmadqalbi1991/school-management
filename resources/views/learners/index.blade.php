@@ -43,7 +43,17 @@
             @can('manage_learners')
                 <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header"><h3>{{ __('Add Learner')}}</h3></div>
+                        <div class="card-header">
+                            <div class="row w-100">
+                                <div class="col-md-6 col-sm-12">
+                                    <h3>{{ __('Add Learner')}}</h3>
+                                </div>
+                                <div class="col-md-6 col-sm-12 text-right">
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#demoModal">
+                                        {{ __('Import Learners') }}</button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="card-body">
                             <form class="forms-sample" method="POST" data-parsley-validate
                                   action="{{ empty($learner) ? route('learners.store') : route('learners.update', ['id' => $learner->id])}}">
@@ -157,7 +167,7 @@
                                                 <option value="">{{ __('Select School') }}</option>
                                                 @foreach($schools as $school)
                                                     <option
-                                                        @if(!empty($learner) && $learner->school_id === $school->id) selected
+                                                        @if((!empty($learner) && $learner->school_id === $school->id) || (!empty(Auth::user()->school_id)) && Auth::user()->school_id === $school->id) selected
                                                         @endif value="{{ $school->id }}">{{ $school->school_name }}</option>
                                                 @endforeach
                                             </select>
@@ -198,6 +208,52 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade show" id="demoModal" tabindex="-1" role="dialog" aria-labelledby="demoModalLabel" aria-modal="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="demoModalLabel">{{ __('Import Learners') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                </div>
+                <form action="{{ route('learners.import') }}" method="post" enctype="multipart/form-data" data-parsley-validate>
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row w-100">
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="class_id">{{ __('Class') }}</label>
+                                    <select name="class_id" id="class_id" class="select2 form-control" required>
+                                        <option value="">{{ __('Select Class') }}</option>
+                                        @foreach($classes as $class)
+                                            <option value="{{ $class->id }}">{{ $class->class }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="stream_id">{{ __('Stream') }}</label>
+                                    <select name="stream_id" id="stream-id" class="select2 form-control" disabled required>
+                                        <option value="">{{ __('Select Stream') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="file">{{ __('Excel File') }}</label>
+                                    <input type="file" name="file" id="file" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-success">{{ __('Import') }}</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

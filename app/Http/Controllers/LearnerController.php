@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\LearnerImport;
 use App\Jobs\EmailJob;
 use App\Models\ClassSubject;
 use App\Models\LearnerSubject;
@@ -11,7 +12,7 @@ use App\Models\Stream;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Auth, DataTables;
+use Auth, DataTables, Excel;
 use Illuminate\Support\Facades\Validator;
 
 class LearnerController extends Controller
@@ -29,9 +30,10 @@ class LearnerController extends Controller
                 $learner = User::where(['id' => $request->get('pass_key'), 'role' => 'learner'])->first();
             }
             $schools = School::where('active', 1)->get();
+            $classes = SchoolClass::where('school_id', Auth::user()->school_id)->get();
             $streams = Stream::with(['school', 'school_class'])->get();
 
-            return view('learners.index', compact('learner', 'schools', 'streams'));
+            return view('learners.index', compact('learner', 'schools', 'streams', 'classes'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -292,6 +294,22 @@ class LearnerController extends Controller
             }
 
             return back()->with('success', 'Subjects assigned to learner');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function import(Request $request) {
+        try {
+            $input = $request->except('_token');
+            Excel::import(new LearnerImport($input['stream_id']), $input['file']);
+
+            return back()->with('success', 'Learners imported successfully');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

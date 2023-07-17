@@ -91,6 +91,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/update/{id}', [LearnerController::class, 'update'])->name('update');
         Route::get('/delete/{id}', [LearnerController::class, 'destroy'])->name('delete');
         Route::get('/change-status/{id}', [LearnerController::class, 'changeStatus'])->name('change-status');
+        Route::post('/import', [LearnerController::class, 'import'])->name('import');
     });
 
     Route::group(['middleware' => 'can:manage_settings', 'as' => 'settings.', 'prefix' => 'settings'], function () {
