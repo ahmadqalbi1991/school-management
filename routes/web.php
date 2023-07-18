@@ -59,9 +59,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/clear-cache', [HomeController::class, 'clearCache']);
 
     // dashboard route
-    Route::get('/dashboard', function () {
-        return view('pages.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
     //only those have manage_user permission will get access
     Route::group(['middleware' => 'can:manage_admins'], function () {
