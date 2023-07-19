@@ -155,6 +155,7 @@ class FormativeAssessmentController extends Controller
 
             return $return_object;
         } catch (\Exception $e) {
+            dd($e);
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
