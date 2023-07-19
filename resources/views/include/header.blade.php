@@ -83,7 +83,7 @@
 {{--                        <a class="dropdown-item" href="{{url('profile')}}"><i class="ik ik-user dropdown-icon"></i> {{ __('Profile')}}</a>--}}
 {{--                        <a class="dropdown-item" href="#"><i class="ik ik-navigation dropdown-icon"></i> {{ __('Message')}}</a>--}}
                         <a class="dropdown-item" href="javascript:void(0)" data-toggle="modal" data-target="#resetPasswordModal">
-                            <i class="ik ik-power dropdown-icon"></i>
+                            <i class="fas fa-envelope dropdown-icon"></i>
                             {{ __('Reset Password')}}
                         </a>
                         <a class="dropdown-item" href="{{ url('logout') }}">
