@@ -76,6 +76,7 @@ class SummativeAssessmentController extends Controller
                 return view('summative-assessments.assessment', compact('terms', 'class', 'class_slug', 'stream_slug', 'learners', 'subject', 'stream', 'min', 'max'));
             }
         } catch (\Exception $e) {
+            dd($e);
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
