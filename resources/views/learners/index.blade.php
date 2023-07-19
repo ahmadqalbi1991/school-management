@@ -49,7 +49,7 @@
                                     <h3>{{ __('Add Learner')}}</h3>
                                 </div>
                                 <div class="col-md-6 col-sm-12 text-right">
-                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#demoModal">
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#learner-modal">
                                         {{ __('Import Learners') }}</button>
                                 </div>
                             </div>
@@ -211,11 +211,11 @@
             </div>
         </div>
     </div>
-    <div class="modal fade show" id="demoModal" tabindex="-1" role="dialog" aria-labelledby="demoModalLabel" aria-modal="true">
+    <div class="modal fade show" id="learner-modal" tabindex="-1" role="dialog" aria-labelledby="learner-modalLabel" aria-modal="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="demoModalLabel">{{ __('Import Learners') }}</h5>
+                    <h5 class="modal-title" id="learner-modalLabel">{{ __('Import Learners') }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
                 </div>
                 <form action="{{ route('learners.import') }}" method="post" enctype="multipart/form-data" data-parsley-validate>

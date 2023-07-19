@@ -11,6 +11,8 @@
     @endpush
 
     <div class="container-fluid">
+        @include('include.message')
+
         <div class="row">
             <!-- page statustic chart start -->
             <div class="col-xl-3 col-md-6">

@@ -82,6 +82,10 @@
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
 {{--                        <a class="dropdown-item" href="{{url('profile')}}"><i class="ik ik-user dropdown-icon"></i> {{ __('Profile')}}</a>--}}
 {{--                        <a class="dropdown-item" href="#"><i class="ik ik-navigation dropdown-icon"></i> {{ __('Message')}}</a>--}}
+                        <a class="dropdown-item" href="javascript:void(0)" data-toggle="modal" data-target="#resetPasswordModal">
+                            <i class="ik ik-power dropdown-icon"></i>
+                            {{ __('Reset Password')}}
+                        </a>
                         <a class="dropdown-item" href="{{ url('logout') }}">
                             <i class="ik ik-power dropdown-icon"></i>
                             {{ __('Logout')}}
@@ -93,3 +97,32 @@
         </div>
     </div>
 </header>
+<div class="modal fade show" id="resetPasswordModal" tabindex="-1" role="dialog" aria-labelledby="resetPasswordModalLabel" aria-modal="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetPasswordModalLabel">{{ __('Send Reset Password Link') }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <form method="POST" action="{{ route('password.email') }}" data-parsley-validate>
+                @csrf
+                <div class="modal-body">
+                    <div class="authentication-form mx-auto">
+                        <div class="row w-100">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" placeholder="Your email address" name="email" value="{{ old('email') }}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-success">{{ __('Send Reset Password Link') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
