@@ -41,7 +41,7 @@ $(document).ready(function() {
             }
 
             $.ajax({
-                url: '/get-assessments/',
+                url: '/get-assessments',
                 type: 'POST',
                 data: {data},
                 headers: {'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')},
